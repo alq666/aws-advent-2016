@@ -43,7 +43,7 @@ By “very limited” we mean that a user should be able to:
 1. Create, update or delete her API credentials.
 1. Create, update (and optionally delete) her own multi-factor authentication device.
 
-And that’s it. So a user in the main account only allows authentication self-service but cannot do much beyond that. This helps limit the “blast radius” if the user’s credentials are compromised (as long as the MFA is not also compromised): an attacker with stolen username/password could at most look at the IAM user record and any attempt to user API credentials would trigger 401 Unauthorized responses from AWS’ APIs.
+And that’s it. So a user in the main account only allows authentication self-service but cannot do much beyond that. This helps limit the “blast radius” if the user’s credentials are compromised (as long as the MFA is not also compromised): an attacker with stolen username/password could at most look at the IAM user record and any attempt to user API credentials would trigger `401 Unauthorized` responses from AWS’ APIs.
 
 ### Access to privileged API calls requires a user to assume a role in the target account
 This is how a user can actually get something done in AWS. Since the user operates under a very restrictive policy by default, she needs to (temporarily) elevate her privileges in a controlled fashion. This pattern is very similar to sudo in Unix land: she requests from the API elevated privileges by calling `sts:AssumeRole` with her own API credentials. If the call succeeds, she gets temporary API credentials and a session token to call the API and do something useful.
@@ -80,7 +80,83 @@ At this point you also have full administrative access to all accounts, which yo
 That “users” group will host all users and needs to have a policy that lets its members look at their own record and update their credentials and control their MFA, nothing more.
 
 Here is an example of policy:
-https://gist.github.com/alq666/d44d69c843cea08a0f809c9a290639ad#file-humans-json
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowUsersAllActionsForCredentials",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListAttachedUserPolicies",
+                "iam:GenerateServiceLastAccessedDetails",
+                "iam:*LoginProfile",
+                "iam:*AccessKey*",
+                "iam:*SigningCertificate*"
+            ],
+            "Resource": [
+                "arn:aws:iam::__M__:user/${aws:username}"
+            ]
+        },
+        {
+            "Sid": "AllowUsersToSeeStatsOnIAMConsoleDashboard",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetAccount*",
+                "iam:ListAccount*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "AllowUsersToListUsersInConsole",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListUsers"
+            ],
+            "Resource": [
+                "arn:aws:iam::__M__:user/*"
+            ]
+        },
+        {
+            "Sid": "AllowUsersToListOwnGroupsInConsole",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListGroupsForUser"
+            ],
+            "Resource": [
+                "arn:aws:iam::__M__:user/${aws:username}"
+            ]
+        },
+        {
+            "Sid": "AllowUsersToCreateTheirOwnVirtualMFADevice",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateVirtualMFADevice",
+                "iam:EnableMFADevice",
+                "iam:ResyncMFADevice"
+            ],
+            "Resource": [
+                "arn:aws:iam::__M__:mfa/${aws:username}",
+                "arn:aws:iam::__M__:user/${aws:username}"
+            ]
+        },
+        {
+            "Sid": "AllowUsersToListVirtualMFADevices",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListMFADevices",
+                "iam:ListVirtualMFADevices"
+            ],
+            "Resource": [
+                "arn:aws:iam::__M__:*"
+            ]
+        }
+    ]
+}
+```
 
 ### Step 2: create Alice, Charlie and Bob in the M(anagement) account as regular IAM users
 That part is easy:
