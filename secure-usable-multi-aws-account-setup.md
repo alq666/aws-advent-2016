@@ -386,6 +386,29 @@ Here are some example of policies that would make sense for each role:
 
 You also need to let the `M` account assume each role so you’ll need to attach the following role delegation stanza to each role in all accounts. Note the requirement for the MFA.
 
+```json
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::M:root"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "Bool": {
+          "aws:MultiFactorAuthPresent": "true"
+        }
+      }
+    }
+  ]
+}
+```
+
+
 ### Step 4: create the corresponding groups in M
 This is the IAM constructs that binds users, the right to assume roles and the target roles. You’ll need 6 groups in the M account.
 
