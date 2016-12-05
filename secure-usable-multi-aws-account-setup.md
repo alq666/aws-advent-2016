@@ -410,10 +410,15 @@ You also need to let the `M` account assume each role so you’ll need to attach
 If you store the policy above in `assume-role-from-m.json` you can create the roles with the following:
 
 ```bash
+# Create the admin role with the appropriate policy and role delegation
 aws iam create-role --role-name admin --assume-role-policy-document file://assume-role-from-m.json
 aws iam put-role-policy --role-name admin --policy-name admin --policy-document file://admin.json
+
+# Create the vpc role with the appropriate policy and role delegation
 aws iam create-role --role-name vpc   --assume-role-policy-document file://assume-role-from-m.json
 aws iam put-role-policy --role-name vpc --policy-name vpc --policy-document file://vpc.json
+
+# Create the ec2 role with the appropriate policy and role delegation
 aws iam create-role --role-name ec2   --assume-role-policy-document file://assume-role-from-m.json
 aws iam put-role-policy --role-name ec2 --policy-name ec2 --policy-document file://ec2.json
 ```
