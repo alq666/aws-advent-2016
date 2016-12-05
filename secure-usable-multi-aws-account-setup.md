@@ -435,14 +435,34 @@ This is the IAM constructs that binds users, the right to assume roles and the t
 * `admin-A`: can assume the `admin` role
 * `admin-B`: same in `B`
 
-Here is how you bind the group to the right to assume a given role. You simply attach a policy (or inline it) to the group:
+Here is how you bind the group to the right to assume a given role. Start with a policy to let the members of the group `admin-A` call `sts:AssumeRole` on the `admin` role in `A`, here saved in `admin-A-delegation.json`. The only moving pieces are in the `Resource` section: the account ID and the role name.
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowGroupToAssumeAdminARole",
+            "Effect": "Allow",
+            "Action": [
+                "sts:AssumeRole"
+            ],
+            "Condition": {
+                "Bool": {
+                    "aws:MultiFactorAuthPresent": "true"
+                }
+            },
+            "Resource": [
+                "arn:aws:iam::__A__:role/admin"
+            ]
+        }
+    ]
+}
+```
+
+Then simply inline the policies above to their respective groups:
 
 ```bash
-# Using the CLI to attach a policy
-# http://docs.aws.amazon.com/cli/latest/reference/iam/put-group-policy.html
-
-# Let members of the group admin-A become admins in the A account and so on
-# To run in account __M__
 aws iam put-group-policy --group-name admin-A --policy-document file://admin-A-delegation.json --policy-name admin-A
 aws iam put-group-policy --group-name admin-B --policy-document file://admin-B-delegation.json --policy-name admin-B
 aws iam put-group-policy --group-name vpc-A --policy-document file://vpc-A-delegation.json --policy-name vpc-A
@@ -451,7 +471,7 @@ aws iam put-group-policy --group-name ec2-A --policy-document file://ec2-A-deleg
 aws iam put-group-policy --group-name ec2-B --policy-document file://ec2-B-delegation.json --policy-name ec2-B
 ```
 
-Now any member of `vpc-A` can call `sts:AssumeRole` on the `vpc` role in account A. If the MFA is present, the `sts:AssumeRole` will now succeed.
+Now any member of `vpc-A` can call `sts:AssumeRole` on the `vpc` role in account A. If the MFA is present, the `sts:AssumeRole` call succeeds.
 
 ### Step 5: add users to groups
 Now that the machinery is in place, you just need to assign users to groups:
