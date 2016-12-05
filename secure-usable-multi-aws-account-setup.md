@@ -394,7 +394,7 @@ You also need to let the `M` account assume each role so you’ll need to attach
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::M:root"
+        "AWS": "arn:aws:iam::__M__:root"
       },
       "Action": "sts:AssumeRole",
       "Condition": {
