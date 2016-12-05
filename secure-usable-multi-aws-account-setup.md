@@ -61,7 +61,7 @@ The MFA requirement, like any security measure, does not make an exploit impossi
 ### Privileged API calls  are grouped together by topic, e.g. VPC, DNS, IAM
 This is the final piece: to keep mapping users to activities reasonably easy to manage, we group them by scope. For instance, let’s assume you want a group of people to manage the network and DNS but not EC2 instances, and vice-versa, and a third group to manage S3. In this case you create 3 roles:
 
-1. A `network` role whose policy allows `ec2:*VPC*`
+1. A `vpc` role whose policy allows network configuration to be changed.
 1. An `ec2` role whose policy allows all EC2 calls except VPC.
 1. An `s3` role whose policy allows all S3 calls.
 
@@ -76,10 +76,10 @@ Let’s assume that you need 3 accounts named A, B and M and let’s start with 
 
 At this point you also have full administrative access to all accounts, which you’ll be able to relinquish when you are done.
 
-### Step 1: create a “users” group in the M(anagement) account
+### Step 1: create a `users` group in the M(anagement) account
 That `users` group will host all users and needs to have a policy that lets its members look at their own record and update their credentials and control their MFA, nothing more.
 
-Here is an example of policy, stored in `users.json`
+Here is an example of policy, `users.json`
 
 ```json
 {
@@ -159,7 +159,7 @@ Here is an example of policy, stored in `users.json`
 ```
 
 ### Step 2: create Alice, Charlie and Bob in the M(anagement) account as regular IAM users
-That part is easy:
+This part is easy:
 
 1. Create all 3 users in the `M` account
 1. Add all 3 to the `users` group
@@ -175,7 +175,7 @@ Thus you need to create a total of 6 roles:
 
 Here are some example of policies that would make sense for each role:
 
-* Admin policy
+* Admin policy for the `admin` role
 
 ```json
 {
@@ -190,7 +190,7 @@ Here are some example of policies that would make sense for each role:
 }
 ```
 
-* EC2 policy
+* EC2 policy for the `ec2` role
 ```json
 {
     "Version": "2012-10-17",
@@ -289,7 +289,7 @@ Here are some example of policies that would make sense for each role:
 }
 ```
 
-* VPC policy
+* VPC policy for the `vpc` role
 ```json
 {
   "Version": "2012-10-17",
@@ -383,7 +383,6 @@ Here are some example of policies that would make sense for each role:
 }
 ```
 
-
 You also need to let the `M` account assume each role so you’ll need to attach the following role delegation stanza to each role in all accounts. Note the requirement for the MFA.
 
 ```json
@@ -408,6 +407,18 @@ You also need to let the `M` account assume each role so you’ll need to attach
 }
 ```
 
+If you store the policy above in `assume-role-from-m.json` you can create the roles with the following:
+
+```bash
+aws iam create-role --role-name admin --assume-role-policy-document file://assume-role-from-m.json
+aws iam put-role-policy --role-name admin --policy-name admin --policy-document file://admin.json
+aws iam create-role --role-name vpc   --assume-role-policy-document file://assume-role-from-m.json
+aws iam put-role-policy --role-name vpc --policy-name vpc --policy-document file://vpc.json
+aws iam create-role --role-name ec2   --assume-role-policy-document file://assume-role-from-m.json
+aws iam put-role-policy --role-name ec2 --policy-name ec2 --policy-document file://ec2.json
+```
+
+You need to do so in all accounts, `A`, `B` and `M`.
 
 ### Step 4: create the corresponding groups in M
 This is the IAM constructs that binds users, the right to assume roles and the target roles. You’ll need 6 groups in the M account.
