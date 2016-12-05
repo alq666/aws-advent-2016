@@ -463,15 +463,23 @@ Here is how you bind the group to the right to assume a given role. Start with a
 Then simply inline the policies above to their respective groups:
 
 ```bash
+# Let members of admin-A become admin in A
 aws iam put-group-policy --group-name admin-A --policy-document file://admin-A-delegation.json --policy-name admin-A
+# Let members of admin-B become admin in B
 aws iam put-group-policy --group-name admin-B --policy-document file://admin-B-delegation.json --policy-name admin-B
+
+# Let members of vpc-A become vpc in A
 aws iam put-group-policy --group-name vpc-A --policy-document file://vpc-A-delegation.json --policy-name vpc-A
+# Let members of vpc-B become vpc in B
 aws iam put-group-policy --group-name vpc-B --policy-document file://vpc-B-delegation.json --policy-name vpc-B
+
+# Let members of ec2-A become ec2 in A
 aws iam put-group-policy --group-name ec2-A --policy-document file://ec2-A-delegation.json --policy-name ec2-A
+# Let members of ec2-B become ec2 in B
 aws iam put-group-policy --group-name ec2-B --policy-document file://ec2-B-delegation.json --policy-name ec2-B
 ```
 
-Now any member of `vpc-A` can call `sts:AssumeRole` on the `vpc` role in account A. If the MFA is present, the `sts:AssumeRole` call succeeds.
+Now any member of `vpc-A` group can call `sts:AssumeRole` on the `vpc` role in account A. The MFA needs to be present for the `sts:AssumeRole` call to succeed.
 
 ### Step 5: add users to groups
 Now that the machinery is in place, you just need to assign users to groups:
