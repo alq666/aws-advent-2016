@@ -1,0 +1,74 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowUsersAllActionsForCredentials",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListAttachedUserPolicies",
+                "iam:GenerateServiceLastAccessedDetails",
+                "iam:*LoginProfile",
+                "iam:*AccessKey*",
+                "iam:*SigningCertificate*"
+            ],
+            "Resource": [
+                "arn:aws:iam::__M__:user/${aws:username}"
+            ]
+        },
+        {
+            "Sid": "AllowUsersToSeeStatsOnIAMConsoleDashboard",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetAccount*",
+                "iam:ListAccount*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "AllowUsersToListUsersInConsole",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListUsers"
+            ],
+            "Resource": [
+                "arn:aws:iam::__M__:user/*"
+            ]
+        },
+        {
+            "Sid": "AllowUsersToListOwnGroupsInConsole",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListGroupsForUser"
+            ],
+            "Resource": [
+                "arn:aws:iam::__M__:user/${aws:username}"
+            ]
+        },
+        {
+            "Sid": "AllowUsersToCreateTheirOwnVirtualMFADevice",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateVirtualMFADevice",
+                "iam:EnableMFADevice",
+                "iam:ResyncMFADevice"
+            ],
+            "Resource": [
+                "arn:aws:iam::__M__:mfa/${aws:username}",
+                "arn:aws:iam::__M__:user/${aws:username}"
+            ]
+        },
+        {
+            "Sid": "AllowUsersToListVirtualMFADevices",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListMFADevices",
+                "iam:ListVirtualMFADevices"
+            ],
+            "Resource": [
+                "arn:aws:iam::__M__:*"
+            ]
+        }
+    ]
+}
