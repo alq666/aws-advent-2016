@@ -46,7 +46,7 @@ By “very limited” we mean that a user should be able to:
 And that’s it. So a user in the main account only allows authentication self-service but cannot do much beyond that. This helps limit the “blast radius” if the user’s credentials are compromised (as long as the MFA is not also compromised): an attacker with stolen username/password could at most look at the IAM user record and any attempt to user API credentials would trigger 401 Unauthorized responses from AWS’ APIs.
 
 ### Access to privileged API calls requires a user to assume a role in the target account
-This is how a user can actually get something done in AWS. Since the user operates under a very restrictive policy by default, she needs to (temporarily) elevate her privileges in a controlled fashion. This pattern is very similar to sudo in Unix land: she requests from the API elevated privileges by calling sts:AssumeRole with her own API credentials. If the call succeeds, she gets temporary API credentials and a session token to call the API and do something useful.
+This is how a user can actually get something done in AWS. Since the user operates under a very restrictive policy by default, she needs to (temporarily) elevate her privileges in a controlled fashion. This pattern is very similar to sudo in Unix land: she requests from the API elevated privileges by calling `sts:AssumeRole` with her own API credentials. If the call succeeds, she gets temporary API credentials and a session token to call the API and do something useful.
 
 These credentials have a short time-to-live (maximum 1 hour by default) so even if they get lost, the time window to exploit them is short.
 
@@ -118,7 +118,7 @@ This is the IAM constructs that binds users, the right to assume roles and the t
 Here is how you bind the group to the right to assume a given role. You simply attach a policy (or inline it) to the group:
 https://gist.github.com/alq666/d44d69c843cea08a0f809c9a290639ad#file-group-policy-sh
 
-Now any member of vpc-A can call sts:AssumeRole on the “vpc” role in account A. If the MFA is present, the sts:AssumeRole will now succeed.
+Now any member of vpc-A can call `sts:AssumeRole` on the “vpc” role in account A. If the MFA is present, the `sts:AssumeRole` will now succeed.
 
 ### Step 5: add users to groups
 Now that the machinery is in place, you just need to assign users to groups:
