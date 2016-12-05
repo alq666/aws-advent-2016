@@ -61,9 +61,9 @@ The MFA requirement, like any security measure, does not make an exploit impossi
 ### Privileged API calls  are grouped together by topic, e.g. VPC, DNS, IAM
 This is the final piece: to keep mapping users to activities reasonably easy to manage, we group them by scope. For instance, let’s assume you want a group of people to manage the network and DNS but not EC2 instances, and vice-versa, and a third group to manage S3. In this case you create 3 roles:
 
-1. A “network” role whose policy allows “ec2:*VPC*”
-1. An “ec2” role whose policy allows all EC2 calls except VPC.
-1. An “s3” role whose policy allows all S3 calls.
+1. A `network` role whose policy allows `ec2:*VPC*`
+1. An `ec2` role whose policy allows all EC2 calls except VPC.
+1. An `s3` role whose policy allows all S3 calls.
 
 ## Tying it all together: an example
 Now that we have all the requirements spelt out, we can get into the details of the implementation. The design is simple and relies solely on simple IAM constructs: users, groups and roles.
@@ -77,9 +77,9 @@ Let’s assume that you need 3 accounts named A, B and M and let’s start with 
 At this point you also have full administrative access to all accounts, which you’ll be able to relinquish when you are done.
 
 ### Step 1: create a “users” group in the M(anagement) account
-That “users” group will host all users and needs to have a policy that lets its members look at their own record and update their credentials and control their MFA, nothing more.
+That `users` group will host all users and needs to have a policy that lets its members look at their own record and update their credentials and control their MFA, nothing more.
 
-Here is an example of policy:
+Here is an example of policy, stored in `users.json`
 
 ```json
 {
@@ -161,24 +161,230 @@ Here is an example of policy:
 ### Step 2: create Alice, Charlie and Bob in the M(anagement) account as regular IAM users
 That part is easy:
 
-1. Create all 3 users in the M account
-1. Add all 3 to the “users” group
+1. Create all 3 users in the `M` account
+1. Add all 3 to the `users` group
 1. Share the console credentials and instruct all 3 users to set up an MFA for their account.
 
 ### Step 3: create 3 roles in A and B accounts
 For symmetry reasons it’s best to create the 3 roles in all accounts even if, in our example, no-one needs just EC2 access to the A account.
 
 Thus you need to create a total of 6 roles:
-1. A “vpc” role in A and B, with a policy  that gives control over VPC
-1. An “ec2” role in A and B, with a policy that gives control over EC2 minus VPC
-1. An “admin” role in A and B, with a policy that gives full control
+1. A `vpc` role in A and B, with a policy  that gives control over VPC
+1. An `ec2` role in A and B, with a policy that gives control over EC2 minus VPC
+1. An `admin` role in A and B, with a policy that gives full control
 
-Here are some example of policies that would make sense for each role.
-https://gist.github.com/alq666/d44d69c843cea08a0f809c9a290639ad#file-admin-json
-https://gist.github.com/alq666/d44d69c843cea08a0f809c9a290639ad#file-ec2-json
-https://gist.github.com/alq666/d44d69c843cea08a0f809c9a290639ad#file-vpc-json
+Here are some example of policies that would make sense for each role:
 
-You also need to let the M account assume each role so you’ll need to attach the following role delegation stanza to each role in all accounts. Note the requirement for the MFA.
+* Admin policy
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "*",
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+* EC2 policy
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+      "Sid": "AllowEC2",
+      "Action": [
+        "ec2:*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyVPC",
+      "Action": [
+        "ec2:AcceptVpcPeeringConnection",
+        "ec2:AllocateAddress",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:AssociateAddress",
+        "ec2:AssociateDhcpOptions",
+        "ec2:AssociateRouteTable",
+        "ec2:AttachClassicLinkVpc",
+        "ec2:AttachInternetGateway",
+        "ec2:AttachNetworkInterface",
+        "ec2:AttachVpnGateway",
+        "ec2:AuthorizeSecurityGroupEgress",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:CreateCustomerGateway",
+        "ec2:CreateDhcpOptions",
+        "ec2:CreateFlowLogs",
+        "ec2:CreateInternetGateway",
+        "ec2:CreateNatGateway",
+        "ec2:CreateNetworkAcl",
+        "ec2:CreateNetworkAcl",
+        "ec2:CreateNetworkAclEntry",
+        "ec2:CreateNetworkInterface",
+        "ec2:CreateRoute",
+        "ec2:CreateRouteTable",
+        "ec2:CreateSecurityGroup",
+        "ec2:CreateSubnet",
+        "ec2:CreateVpc",
+        "ec2:CreateVpcEndpoint",
+        "ec2:CreateVpcPeeringConnection",
+        "ec2:CreateVpnConnection",
+        "ec2:CreateVpnConnectionRoute",
+        "ec2:CreateVpnGateway",
+        "ec2:DeleteCustomerGateway",
+        "ec2:DeleteDhcpOptions",
+        "ec2:DeleteFlowLogs",
+        "ec2:DeleteInternetGateway",
+        "ec2:DeleteNatGateway",
+        "ec2:DeleteNetworkAcl",
+        "ec2:DeleteNetworkAclEntry",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DeleteRoute",
+        "ec2:DeleteRouteTable",
+        "ec2:DeleteSecurityGroup",
+        "ec2:DeleteSubnet",
+        "ec2:DeleteVpc",
+        "ec2:DeleteVpcEndpoints",
+        "ec2:DeleteVpcPeeringConnection",
+        "ec2:DeleteVpnConnection",
+        "ec2:DeleteVpnConnectionRoute",
+        "ec2:DeleteVpnGateway",
+        "ec2:DetachClassicLinkVpc",
+        "ec2:DetachInternetGateway",
+        "ec2:DetachNetworkInterface",
+        "ec2:DetachVpnGateway",
+        "ec2:DisableVgwRoutePropagation",
+        "ec2:DisableVpcClassicLink",
+        "ec2:DisassociateAddress",
+        "ec2:DisassociateRouteTable",
+        "ec2:EnableVgwRoutePropagation",
+        "ec2:EnableVpcClassicLink",
+        "ec2:ModifyNetworkInterfaceAttribute",
+        "ec2:ModifySubnetAttribute",
+        "ec2:ModifyVpcAttribute",
+        "ec2:ModifyVpcEndpoint",
+        "ec2:MoveAddressToVpc",
+        "ec2:RejectVpcPeeringConnection",
+        "ec2:ReleaseAddress",
+        "ec2:ReplaceNetworkAclAssociation",
+        "ec2:ReplaceNetworkAclEntry",
+        "ec2:ReplaceRoute",
+        "ec2:ReplaceRouteTableAssociation",
+        "ec2:ResetNetworkInterfaceAttribute",
+        "ec2:RestoreAddressToClassic",
+        "ec2:RevokeSecurityGroupEgress",
+        "ec2:RevokeSecurityGroupIngress",
+        "ec2:UnassignPrivateIpAddresses"
+      ],
+      "Effect": "Deny",
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+* VPC policy
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AcceptVpcPeeringConnection",
+        "ec2:AllocateAddress",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:AssociateAddress",
+        "ec2:AssociateDhcpOptions",
+        "ec2:AssociateRouteTable",
+        "ec2:AttachClassicLinkVpc",
+        "ec2:AttachInternetGateway",
+        "ec2:AttachNetworkInterface",
+        "ec2:AttachVpnGateway",
+        "ec2:AuthorizeSecurityGroupEgress",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:CreateCustomerGateway",
+        "ec2:CreateDhcpOptions",
+        "ec2:CreateFlowLogs",
+        "ec2:CreateInternetGateway",
+        "ec2:CreateNatGateway",
+        "ec2:CreateNetworkAcl",
+        "ec2:CreateNetworkAcl",
+        "ec2:CreateNetworkAclEntry",
+        "ec2:CreateNetworkInterface",
+        "ec2:CreateRoute",
+        "ec2:CreateRouteTable",
+        "ec2:CreateSecurityGroup",
+        "ec2:CreateSubnet",
+        "ec2:CreateTags",
+        "ec2:CreateVpc",
+        "ec2:CreateVpcEndpoint",
+        "ec2:CreateVpcPeeringConnection",
+        "ec2:CreateVpnConnection",
+        "ec2:CreateVpnConnectionRoute",
+        "ec2:CreateVpnGateway",
+        "ec2:DeleteCustomerGateway",
+        "ec2:DeleteDhcpOptions",
+        "ec2:DeleteFlowLogs",
+        "ec2:DeleteInternetGateway",
+        "ec2:DeleteNatGateway",
+        "ec2:DeleteNetworkAcl",
+        "ec2:DeleteNetworkAclEntry",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DeleteRoute",
+        "ec2:DeleteRouteTable",
+        "ec2:DeleteSecurityGroup",
+        "ec2:DeleteSubnet",
+        "ec2:DeleteTags",
+        "ec2:DeleteVpc",
+        "ec2:DeleteVpcEndpoints",
+        "ec2:DeleteVpcPeeringConnection",
+        "ec2:DeleteVpnConnection",
+        "ec2:DeleteVpnConnectionRoute",
+        "ec2:DeleteVpnGateway",
+        "ec2:Describe*",
+        "ec2:DetachClassicLinkVpc",
+        "ec2:DetachInternetGateway",
+        "ec2:DetachNetworkInterface",
+        "ec2:DetachVpnGateway",
+        "ec2:DisableVgwRoutePropagation",
+        "ec2:DisableVpcClassicLink",
+        "ec2:DisassociateAddress",
+        "ec2:DisassociateRouteTable",
+        "ec2:EnableVgwRoutePropagation",
+        "ec2:EnableVpcClassicLink",
+        "ec2:ModifyNetworkInterfaceAttribute",
+        "ec2:ModifySubnetAttribute",
+        "ec2:ModifyVpcAttribute",
+        "ec2:ModifyVpcEndpoint",
+        "ec2:ModifyVpcPeeringConnectionOptions",
+        "ec2:MoveAddressToVpc",
+        "ec2:RejectVpcPeeringConnection",
+        "ec2:ReleaseAddress",
+        "ec2:ReplaceNetworkAclAssociation",
+        "ec2:ReplaceNetworkAclEntry",
+        "ec2:ReplaceRoute",
+        "ec2:ReplaceRouteTableAssociation",
+        "ec2:ResetNetworkInterfaceAttribute",
+        "ec2:RestoreAddressToClassic",
+        "ec2:RevokeSecurityGroupEgress",
+        "ec2:RevokeSecurityGroupIngress",
+        "ec2:UnassignPrivateIpAddresses"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+
+You also need to let the `M` account assume each role so you’ll need to attach the following role delegation stanza to each role in all accounts. Note the requirement for the MFA.
 
 ### Step 4: create the corresponding groups in M
 This is the IAM constructs that binds users, the right to assume roles and the target roles. You’ll need 6 groups in the M account.
