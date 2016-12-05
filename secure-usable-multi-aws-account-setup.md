@@ -389,12 +389,12 @@ You also need to let the `M` account assume each role so you’ll need to attach
 ### Step 4: create the corresponding groups in M
 This is the IAM constructs that binds users, the right to assume roles and the target roles. You’ll need 6 groups in the M account.
 
-* vpc-A: can assume the vpc role in A
-* vpc-B: same in B
-* ec2-A: can assume the ec2 role in A
-* ec2-B: same in B
-* admin-A: can assume the admin role
-* admin-B: same in B
+* `vpc-A`: can assume the `vpc` role in `A`
+* `vpc-B`: same in `B`
+* `ec2-A`: can assume the `ec2` role in `A`
+* `ec2-B`: same in `B`
+* `admin-A`: can assume the `admin` role
+* `admin-B`: same in `B`
 
 Here is how you bind the group to the right to assume a given role. You simply attach a policy (or inline it) to the group:
 
@@ -417,9 +417,9 @@ Now any member of `vpc-A` can call `sts:AssumeRole` on the `vpc` role in account
 ### Step 5: add users to groups
 Now that the machinery is in place, you just need to assign users to groups:
 
-1. Alice belongs to “vpc-A” and “vpc-B”.
-1. Bob belongs to “ec2-B”.
-1. Charlie belongs to “admin-A” and “admin-B”.
+1. Alice belongs to `vpc-A` and `vpc-B`.
+1. Bob belongs to `ec2-B`.
+1. Charlie belongs to `admin-A` and `admin-B`.
 
 And you are done.
 
